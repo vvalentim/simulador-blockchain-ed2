@@ -1,0 +1,3 @@
+# Ignora os arquivos gerado pelo Makefile
+objects/*.o
+blockchain
