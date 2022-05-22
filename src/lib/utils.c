@@ -9,3 +9,16 @@ void printSHA256(unsigned char *hash) {
     printf("%02x", hash[i]);
   }
 }
+
+unsigned char compararSHA256(unsigned char *h1, unsigned char *h2) {
+  unsigned char flag = 1;
+
+  for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    if (h1[i] != h2[i]) {
+      flag = 0;
+      break;
+    }
+  }
+
+  return flag;
+}
