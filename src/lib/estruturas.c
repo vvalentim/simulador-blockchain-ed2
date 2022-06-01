@@ -2,13 +2,13 @@
 
 unsigned char autenticarBloco(unsigned char *hashAnterior, unsigned char *hashMinerada, BlocoNaoMinerado *bloco) {
   /* Compara se a hash do bloco anterior coincide com a hash usada como "dado" na estrutura do bloco não minerado. */
-  unsigned char flag = compararSHA256(hashAnterior, bloco->hashAnterior);
+  unsigned char flag = compSHA256(hashAnterior, bloco->hashAnterior);
 
   if (flag) {
     /* Se a hash de referência for igual, executa o algoritmo SHA256 sobre o bloco não minerado e compara com a hash que já foi minerada. */
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256((unsigned char *)bloco, sizeof(BlocoNaoMinerado), hash);
-    flag = compararSHA256(hashMinerada, hash);
+    flag = compSHA256(hashMinerada, hash);
   }
 
   return flag;
@@ -37,7 +37,7 @@ BlocoNaoMinerado novoBloco(int numero, unsigned char *hashAnterior, MTRand *gera
   /* Simula um número randômico de transações contidas no bloco */
   unsigned char transacoes = randChar(gerador, 1, 61);
 
-  printf("Número de transações geradas: %d\n", transacoes);
+  printf("Bloco criado, número de transações geradas: %d\n", transacoes);
 
   /* Iteração para gerar os dados individuais de cada transação */
   for (int t = 0; t < transacoes; t++) {
@@ -78,7 +78,7 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
   if (minerado != NULL) {
     minerado->bloco = novoBloco(numAnterior, hashAnterior, gerador);
     
-    printf("\nIniciando mineração do bloco nº %d:", minerado->bloco.numero);
+    printf("Iniciando mineração do bloco nº %d:", minerado->bloco.numero);
     printf("\n");
 
     SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);

@@ -32,6 +32,15 @@ void printSHA256(unsigned char *hash);
  * 
  * @return Retorna 0 ou 1 para falso/verdadeiro.
  */
-unsigned char compararSHA256(unsigned char *h1, unsigned char *h2);
+unsigned char compSHA256(unsigned char *h1, unsigned char *h2);
+
+/**
+ * Captura o input do usuário como string, faz a validação e retorna um inteiro.
+ * 
+ * @param errMsg - Ponteiro contendo a mensagem de erro caso falhe a conversão do input para inteiro.
+ * 
+ * @return Retorna um inteiro.
+ */
+int getIntInput(char *errMsg);
 
 #endif

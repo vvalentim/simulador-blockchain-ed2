@@ -5,12 +5,12 @@ unsigned char randChar(MTRand *generator, unsigned char min, unsigned char max) 
 }
 
 void printSHA256(unsigned char *hash) {
-  for(unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+  for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
     printf("%02x", hash[i]);
   }
 }
 
-unsigned char compararSHA256(unsigned char *h1, unsigned char *h2) {
+unsigned char compSHA256(unsigned char *h1, unsigned char *h2) {
   unsigned char flag = 1;
 
   for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
@@ -21,4 +21,24 @@ unsigned char compararSHA256(unsigned char *h1, unsigned char *h2) {
   }
 
   return flag;
+}
+
+int getIntInput(char *errMsg) {
+  char *end = NULL;
+	char buf[255];
+	int n = 0;
+  
+	while (fgets(buf, sizeof(buf), stdin)) {
+		n = strtol(buf, &end, 10);
+
+		if (end == buf || *end != '\n') {
+			if (errMsg != NULL) {
+        printf("%s", errMsg);
+      }
+		} else { 
+      break; 
+    }
+	}
+  
+  return n;
 }

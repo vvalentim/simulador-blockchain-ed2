@@ -75,7 +75,7 @@ TNoBloco * inserirBloco(TNoBloco **inicio, BlocoMinerado *pb);
 /**
  * Retorna o ponteiro para o último bloco da lista.
  * 
- * @param inicio - Ponteiro inicial da lista de blocos.
+ * @param ini - Ponteiro inicial da lista de blocos.
  * @return Retorna o ponteiro para o último elemento da lista de blocos.
  */
 TNoBloco * ultimoBloco(TNoBloco *ini);
