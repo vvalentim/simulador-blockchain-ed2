@@ -69,6 +69,11 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
   unsigned char *hashAnterior = NULL;
 
   if (pb != NULL) {
+    if (pb->bloco.numero == UINT_MAX) {
+      printf("Atingiu limite de inteiro para o número de bloco.\n");
+      return NULL;
+    }
+
     numAnterior = pb->bloco.numero + 1;
     hashAnterior = pb->hash;
   }
@@ -82,15 +87,19 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
     printf("\n");
 
     SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
+
     while (minerado->hash[0] != 0 || minerado->hash[1] != 0) {
-      // printf("Hash inválida: ");
-      // printSHA256(minerado->hash);
-      // printf("\n");
+      if (minerado->bloco.nonce == UINT_MAX) {
+        printf("Atingiu limite de inteiro para o número nonce.\n");
+        free(minerado);
+        return NULL;
+      }
+
       minerado->bloco.nonce += 1;
       SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
     }
     
-    printf("Hash válida: ");
+    printf("Hash encontrada: ");
     printSHA256(minerado->hash);
     printf("\n");
     printf("Nonce: %d\n", minerado->bloco.nonce);
