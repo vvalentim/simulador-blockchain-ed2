@@ -26,14 +26,6 @@ typedef struct BlocoMinerado {
 } BlocoMinerado;
 
 /**
- * TAD do tipo lista simples para encadeamento de blocos minerados.
- */
-typedef struct TNoBloco {
-  BlocoMinerado *ref;
-  struct TNoBloco * prox;
-} TNoBloco;
-
-/**
  * Verifica um bloco para garantir que pode ser ligado ao bloco anterior.
  * 
  * @param hashAnterior - Endereço da hash minerada do bloco anterior, a função assume que esse valor não é nulo.
@@ -63,20 +55,4 @@ BlocoNaoMinerado novoBloco(int numero, unsigned char *hashAnterior, MTRand *gera
  */
 BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador);
 
-/**
- * Insere um bloco em uma lista encadeada.
- * 
- * @param inicio - Endereço do ponteiro inicial da lista de blocos, a função assume que esse valor não é nulo.
- * @param pb - Endereço de um bloco minerado, a função assume que esse valor não é nulo.
- * @return Retorna o endereço do nó recém inserido caso a inserção suceda, ao contrário retorna nulo.
- */
-TNoBloco * inserirBloco(TNoBloco **inicio, BlocoMinerado *pb);
-
-/**
- * Retorna o ponteiro para o último bloco da lista.
- * 
- * @param ini - Ponteiro inicial da lista de blocos.
- * @return Retorna o ponteiro para o último elemento da lista de blocos.
- */
-TNoBloco * ultimoBloco(TNoBloco *ini);
 #endif

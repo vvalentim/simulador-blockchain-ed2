@@ -21,173 +21,135 @@ int mostrarMenu() {
   return opt;
 }
 
-void minerarBlocos(TNoBloco **blockchain, TNoBloco **ult, MTRand *rng) {
+void carregarUltimoBloco(BlocoMinerado **ultimoBloco, MTRand *rng) {
+  FILE *fp_blocos = fopen(__PATH_BLOCOS__, "rb");
+
+  if (fp_blocos != NULL) {
+    long t = 0;
+    
+    /* Verifica se o arquivo possui conteúdo. */
+    fseek(fp_blocos, 0, SEEK_END);
+    t = ftell(fp_blocos);
+
+    if (t >= 256) {
+      FILE *fp_rand = fopen(__PATH_SEQ_RAND__, "rb");
+
+      if (fp_rand != NULL) {
+        unsigned long it = 0;
+
+        fread(&it, sizeof(it), 1, fp_rand);
+        fclose(fp_rand);
+
+        while (it > __SEQ_RAND__) {
+          randChar(rng, 0, 1);
+        }
+      }
+
+      BlocoMinerado *pb = (BlocoMinerado *)malloc(sizeof(BlocoMinerado));
+
+      if (pb != NULL) {
+        fseek(fp_blocos, -256, SEEK_END);
+        fread(pb, sizeof(BlocoMinerado), 1, fp_blocos);
+        *ultimoBloco = pb;
+      }
+    }
+
+    fclose(fp_blocos);
+  }
+}
+
+void salvarBloco(BlocoMinerado *bloco) {
+  FILE *fp_blocos = fp_blocos = fopen(__PATH_BLOCOS__, "ab");
+  FILE *fp_rand = fp_rand = fopen(__PATH_SEQ_RAND__, "wb");
+
+  if (fp_rand == NULL || fp_blocos == NULL) {
+    printf("Erro ao tentar salvar o conteúdo dos blocos.\n");
+    return;
+  }
+
+  fwrite(&__SEQ_RAND__, sizeof(__SEQ_RAND__), 1, fp_rand);
+
+  if (ferror(fp_rand)) {
+    printf("Erro ao tentar salvar o número da sequência.\n");
+    return;
+  }
+
+  fwrite(bloco, sizeof(BlocoMinerado), 1, fp_blocos);
+  
+  if (ferror(fp_blocos)) {
+    printf("Erro ao tentar salvar o conteúdo do bloco.\n");
+    return;
+  }
+
+  fclose(fp_rand);
+  fclose(fp_blocos);
+}
+
+void minerarBlocos(BlocoMinerado **ultimo, MTRand *rng) {
   int qntdMinerar = 0;
   printf("Informe a quantidade de blocos: ");
 
   while (qntdMinerar <= 0) {
     if ((qntdMinerar = getIntInput("Quantidade invalida: ")) <= 0) {
-      printf("Quantidade de blocos nao pode ser negativa: ");
+      printf("Quantidade de blocos deve ser um inteiro positivo: ");
     }
   }
 
-  clock_t begin = clock();
+  clock_t begin;
+  clock_t end;
+  double time_spent;
 
   printf("------------\nIniciando mineracao...\n------------\n");
 
   int minerados = 0;
 
   while (minerados < qntdMinerar) {
-    BlocoMinerado *pb = simularMineracao(*ult ? (*ult)->ref : NULL, rng);
-
-    printf("------------\n");
+    begin = clock();
+    BlocoMinerado *pb = simularMineracao(*ultimo ? *ultimo : NULL, rng);
 
     if (pb == NULL) {
       printf("Falha em criar/simular mineração do bloco.");
       break;
     }
 
-    *ult = inserirBloco(blockchain, pb);
-
-    if (*ult == NULL) {
-      printf("Falha em inserir o bloco %d.\n", pb->bloco.numero);
-      break;
-    }
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("Finalizou mineracao do bloco: %f\n", time_spent);
+    printf("------------\n");
+    
+    /* Salva o bloco e define o recém minerado como o último bloco. */
+    salvarBloco(pb);
+    free(*ultimo);
+    *ultimo = pb;
 
     minerados++;
   }
-
-  clock_t end = clock();
-  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-  printf("Finalizou mineracao: %f\n", time_spent);
 }
 
-void salvarBlocos(TNoBloco *blockchain) {
-  FILE *fp = NULL;
-  fp = fopen("./bin/blocos.dat", "w+");
-
-  if (fp != NULL) {
-    TNoBloco *aux = blockchain;
-    
-    while (aux != NULL) {
-      fwrite(aux->ref, sizeof(BlocoMinerado), 1, fp);
-
-      if (ferror(fp)) {
-        printf("Erro ao tentar salvar o conteúdo da blockchain.\n");
-        break;
-      }
-
-      aux = aux->prox;
-    }
-  } else {
-    printf("Falha ao tentar abrir/criar o arquivo da blockchain.");
-  }
-
-  fclose(fp);
-}
-
-void carregarBlocos(TNoBloco **blockchain) {
-  FILE *fp = NULL;
-  fp = fopen("./bin/blocos.dat", "rb");
-
-  if (fp != NULL) {
-    long qntd = 0;
-    long tamanho = 0;
-
-    fseek(fp, 0, SEEK_END);
-    tamanho = ftell(fp);
-    rewind(fp);
-
-    if (tamanho % 256 == 0) {
-      BlocoMinerado *buffer = NULL;
-      unsigned char falha = 0;
-
-      /* Define a quantidade blocos que o arquivo possui, levando em consideração que cada bloco possui 256 bytes. */
-      qntd = tamanho / 256;
-
-      while (qntd) {
-        buffer = (BlocoMinerado *)malloc(sizeof(BlocoMinerado));
-
-        if (buffer == NULL) {
-          falha = 1;
-          printf("Falha ao tentar alocar a memória necessária para um dos blocos.\n");
-          break;
-        }
-
-        if (!fread(buffer, 256, 1, fp)) {
-          falha = 1;
-          printf("Falha na leitura de um dos blocos do arquivos (byte %lu).\n", ftell(fp));
-          break;
-        }
-
-        if (inserirBloco(blockchain, buffer) == NULL) {
-          falha = 1;
-          printf("Falha na inserção de um dos blocos na blockchain.\n");
-          break;
-        }
-
-        qntd--;
-      }
-
-      if (falha) {
-        free(buffer);
-        buffer = NULL;
-      }
-    } else {
-      printf("Falha na leitura do arquivo, tamanho do arquivo não corresponde a uma quantidade válida de blocos.\n");
-    }
-
-    fclose(fp);
+void listarTransacoes(BlocoMinerado *pb) {
+  for (int t = 0; t < 61; t++) {
+    /* Calcula o próximo indice no vetor de dados */
+    int i = t * 3;
+    printf("%d\t%d\t%d\n", pb->bloco.data[i], pb->bloco.data[i + 1], pb->bloco.data[i + 2]);
   }
 }
-
-void listagemBlocos(TNoBloco *blockchain) {
-  while (blockchain != NULL) {
-    printf(
-      "%d\t%d\t", 
-      blockchain->ref->bloco.numero,
-      blockchain->ref->bloco.nonce
-    );
-
-    printSHA256(blockchain->ref->bloco.hashAnterior);
-    printf("\t");
-    printSHA256(blockchain->ref->hash);
-    printf("\n");
-
-    blockchain = blockchain->prox;
-  }
-}
-
-TNoBloco *buscaUltimoBloco(TNoBloco *blockchain) {
-  while (blockchain->prox != NULL) {
-    blockchain = blockchain->prox;
-  }
-
-  return blockchain;
-}
-
-// Blocos: 1021, 1022, 1095, 1099 possuem 5 zeros iniciais!!
 
 int main() {
   MTRand rng = seedRand(1234567);
-  TNoBloco *blockchain = NULL;
+  BlocoMinerado *ultimo = NULL;
 
-  carregarBlocos(&blockchain);
+  carregarUltimoBloco(&ultimo, &rng);
 
   int continuar = 1;
-  TNoBloco *ult = buscaUltimoBloco(blockchain);
 
   while (continuar) {
     printf("--------------------\n");
     continuar = mostrarMenu();
 
     switch (continuar) {
-      case 1: minerarBlocos(&blockchain, &ult, &rng); break;
+      case 1: minerarBlocos(&ultimo, &rng); break;
     }
   }
-
-  salvarBlocos(blockchain);
-  listagemBlocos(blockchain);
   
   return 0;
 }

@@ -88,9 +88,9 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
 
     SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
 
-    while (minerado->hash[0] != 0 || minerado->hash[1] != 0) {
+    while (minerado->hash[0] != 0 || minerado->hash[1]) {
       if (minerado->bloco.nonce == UINT_MAX) {
-        printf("Atingiu limite de inteiro para o número nonce.\n");
+        printf("Atingiu limite de inteiro (UINT_MAX) para o número nonce.\n");
         free(minerado);
         return NULL;
       }
@@ -106,53 +106,4 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
   }
 
   return minerado;
-}
-
-TNoBloco * ultimoBloco(TNoBloco *ini) {
-  TNoBloco *ult = ini;
-
-  if (ini != NULL) {
-    while (ult->prox != NULL) {
-      ult = ult->prox;
-    }
-  }
-
-  return ult;
-}
-
-TNoBloco * inserirBloco(TNoBloco **ini, BlocoMinerado *pb) {
-  TNoBloco *no = NULL;
-  no = (TNoBloco *)malloc(sizeof(TNoBloco));
-
-  if (no != NULL) {
-    no->ref = pb;
-    no->prox = NULL;
-
-    /* Condicional para checar lista vazia e/ou buscar último nó da lista. */
-    if (*ini == NULL) {
-      unsigned char hash[SHA256_DIGEST_LENGTH];
-
-      for (int i= 0; i < SHA256_DIGEST_LENGTH; i++) {
-        hash[i] = 0;
-      }
-
-      if (!autenticarBloco(hash, pb->hash, &(pb->bloco))) {
-        free(no);
-        no = NULL;
-      } else {
-        *ini = no;
-      }
-    } else {
-      TNoBloco *ult = ultimoBloco(*ini);
-
-      if (!autenticarBloco(ult->ref->hash, pb->hash, &(pb->bloco))) {
-        free(no);
-        no = NULL;
-      } else {
-        ult->prox = no;
-      }
-    }
-  }
-
-  return no;
 }

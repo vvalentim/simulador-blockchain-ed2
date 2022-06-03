@@ -5,7 +5,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <openssl/sha.h>
+#include <limits.h>
 #include "../vendor/mtwister.h"
+#include "./defs.h"
 
 /**
  * Gera e retorna um caractere randômico baseado no intervalo definido.

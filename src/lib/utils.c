@@ -1,6 +1,7 @@
 #include "utils.h"
 
 unsigned char randChar(MTRand *generator, unsigned char min, unsigned char max) {
+  __SEQ_RAND__ = __SEQ_RAND__ == ULONG_MAX ? 0 : __SEQ_RAND__ + 1;
   return min + genRandLong(generator) % max + 1 - min;
 }
 
