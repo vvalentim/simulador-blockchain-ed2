@@ -88,7 +88,7 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
 
     SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
 
-    while (minerado->hash[0] != 0 || minerado->hash[1]) {
+    while (minerado->hash[0] != 0 || minerado->hash[1] != 0) {
       if (minerado->bloco.nonce == UINT_MAX) {
         printf("Atingiu limite de inteiro (UINT_MAX) para o número nonce.\n");
         free(minerado);
