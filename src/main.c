@@ -1,6 +1,5 @@
 #include "./lib/estruturas.h"
 #include <time.h>
-#include <string.h>
 #include <unistd.h>
 
 int mostrarMenu() {
@@ -108,7 +107,7 @@ void minerarBlocos(BlocoMinerado **ultimo, MTRand *rng) {
     BlocoMinerado *pb = simularMineracao(*ultimo ? *ultimo : NULL, rng);
 
     if (pb == NULL) {
-      printf("Falha em criar/simular mineração do bloco.");
+      printf("Falha em criar/simular mineração do bloco.\n");
       break;
     }
 
@@ -130,7 +129,7 @@ void listarTransacoes(BlocoMinerado *pb) {
   for (int t = 0; t < 61; t++) {
     /* Calcula o próximo indice no vetor de dados */
     int i = t * 3;
-    printf("%d\t%d\t%d\n", pb->bloco.data[i], pb->bloco.data[i + 1], pb->bloco.data[i + 2]);
+    printf("%u\t%u\t%u\n", pb->bloco.data[i], pb->bloco.data[i + 1], pb->bloco.data[i + 2]);
   }
 }
 
@@ -139,6 +138,14 @@ int main() {
   BlocoMinerado *ultimo = NULL;
 
   carregarUltimoBloco(&ultimo, &rng);
+
+  if (ultimo != NULL) {
+    printf("--------------------\nÚltimo bloco minerado: ");
+    printf("%u %u ", ultimo->bloco.numero, ultimo->bloco.nonce);
+    printSHA256(ultimo->hash);
+    printf("\n");
+    // listarTransacoes(ultimo);
+  }
 
   int continuar = 1;
 

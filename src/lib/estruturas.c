@@ -57,8 +57,6 @@ BlocoNaoMinerado novoBloco(int numero, unsigned char *hashAnterior, MTRand *gera
     bloco.data[i] = addr1;
     bloco.data[i + 1] = addr2;
     bloco.data[i + 2] = valor;
-
-    // printf("%d %d %d\n", bloco.data[i], bloco.data[i + 1], bloco.data[i + 2]);
   }
 
   return bloco;
@@ -70,10 +68,10 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
 
   if (pb != NULL) {
     if (pb->bloco.numero == UINT_MAX) {
-      printf("Atingiu limite de inteiro para o número de bloco.\n");
+      printf("Atingiu limite de inteiro (UINT_MAX) para o número de blocos.\n");
       return NULL;
     }
-
+    
     numAnterior = pb->bloco.numero + 1;
     hashAnterior = pb->hash;
   }
@@ -83,26 +81,38 @@ BlocoMinerado * simularMineracao(BlocoMinerado *pb, MTRand *gerador) {
   if (minerado != NULL) {
     minerado->bloco = novoBloco(numAnterior, hashAnterior, gerador);
     
-    printf("Iniciando mineração do bloco nº %d:", minerado->bloco.numero);
+    printf("Iniciando mineração do bloco nº %u com dificuldade %d:", minerado->bloco.numero, __BLOCKCHAIN_DIFF__);
     printf("\n");
 
     SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
 
-    while (minerado->hash[0] != 0 || minerado->hash[1] != 0) {
+    while (!checkHashPoW(minerado->hash)) {
       if (minerado->bloco.nonce == UINT_MAX) {
-        printf("Atingiu limite de inteiro (UINT_MAX) para o número nonce.\n");
-        free(minerado);
-        return NULL;
+        if (__BLOCKCHAIN_DIFF__ >= 1) {
+          printf("Atingiu limite de inteiro (UINT_MAX) para o número nonce, o valor será resetado e a dificuldade diminuida para %d.\n", __BLOCKCHAIN_DIFF__ - 1);
+          __BLOCKCHAIN_DIFF__ -= 1;
+          minerado->bloco.nonce = 0;
+          SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
+        } else {
+          printf("Atingiu limite de inteiro (UINT_MAX) para o número nonce, não foi possível diminuir a dificuldade.\n");
+          free(minerado);
+          return NULL;
+        }
+      } else {
+        minerado->bloco.nonce += 1;
+        SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
       }
-
-      minerado->bloco.nonce += 1;
-      SHA256((unsigned char *)&(minerado->bloco), sizeof(BlocoNaoMinerado), minerado->hash);
     }
     
     printf("Hash encontrada: ");
     printSHA256(minerado->hash);
     printf("\n");
-    printf("Nonce: %d\n", minerado->bloco.nonce);
+    printf("Nonce: %u\n", minerado->bloco.nonce);
+    printf("Dificuldade: %d\n", __BLOCKCHAIN_DIFF__);
+
+    if (__BLOCKCHAIN_DIFF__ != __BLOCKCHAIN_MAX_DIFF__) {
+      __BLOCKCHAIN_DIFF__ = __BLOCKCHAIN_MAX_DIFF__;
+    }
   }
 
   return minerado;

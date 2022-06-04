@@ -20,6 +20,14 @@
 unsigned char randChar(MTRand *generator, unsigned char min, unsigned char max);
 
 /**
+ * Verifica o "Proof of Work" de uma hash baseado na dificuldade definida, checando número de bytes iniciais com o valor zero.
+ * 
+ * @param hash - Endereço do vetor hash que será verificado.
+ * @return Retorna 0 ou 1 para falso/verdadeiro.
+ */
+int checkHashPoW(unsigned char *hash);
+
+/**
  * Imprime um vetor com a hash SHA256 (condizente com o tamanho de 32 bytes)
  * 
  * @param hash - Endereço do vetor hash para impressão, a função assume que esse valor não é nulo.
@@ -39,7 +47,7 @@ unsigned char compSHA256(unsigned char *h1, unsigned char *h2);
 /**
  * Captura o input do usuário como string, faz a validação e retorna um inteiro.
  * 
- * @param errMsg - Ponteiro contendo a mensagem de erro caso falhe a conversão do input para inteiro.
+ * @param errMsg - Endereço de um vetor de caracteres contendo a mensagem de erro, caso falhe a conversão do input para inteiro.
  * 
  * @return Retorna um inteiro.
  */

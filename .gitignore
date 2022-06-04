@@ -2,3 +2,4 @@
 objects/*.o
 blockchain
 dat/
+logs/

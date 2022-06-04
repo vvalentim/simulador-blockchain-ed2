@@ -5,6 +5,19 @@ unsigned char randChar(MTRand *generator, unsigned char min, unsigned char max) 
   return min + genRandLong(generator) % max + 1 - min;
 }
 
+int checkHashPoW(unsigned char *hash) {
+  int flag = 1;
+
+  for (unsigned char i = 0; i < __BLOCKCHAIN_DIFF__; i++) {
+    if (hash[i] != 0) {
+      flag = 0;
+      break;
+    }
+  }
+
+  return flag;
+}
+
 void printSHA256(unsigned char *hash) {
   for (unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
     printf("%02x", hash[i]);
