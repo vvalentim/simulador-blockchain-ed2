@@ -1,9 +1,17 @@
-#ifndef __DEFS_BLOCKCHAIN__
-  #define __DEFS_BLOCKCHAIN__ 1
-  #define __PATH_BLOCOS__ "./dat/blocos_4b.dat.test"
-  #define __PATH_SEQ_RAND__ "./dat/seq_rand_4b.dat.test"
+#ifndef __DEFS_BLOCKCHAIN
+#define __DEFS_BLOCKCHAIN
+#include <pthread.h>
 
-  extern unsigned long __SEQ_RAND__;
-  extern unsigned char __BLOCKCHAIN_DIFF__;
-  extern unsigned char __BLOCKCHAIN_MAX_DIFF__;
+#define __MAX_THREADS 8
+#define __FILE_BLOCKS "./dat/mt_blocks_a.dat"
+#define __FILE_RAND "./dat/mt_rand_a.dat"
+/* Number of calls to the RNG function. */
+extern unsigned long __SEQ_RAND;
+/* Proof of work current difficulty, should be changed back to the maximum diffculty whenever a block is successfully mined. */
+extern unsigned char __PROOF_DIFF;
+/* Proof of work maximum difficulty. */
+extern unsigned char __PROOF_MAX_DIFF;
+/* Mutex for the hashing threads */
+extern pthread_mutex_t __PROOF_MUTEX;
+
 #endif

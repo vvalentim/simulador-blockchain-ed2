@@ -3,3 +3,4 @@ objects/*.o
 blockchain
 dat/
 logs/
+test.c

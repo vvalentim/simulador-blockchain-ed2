@@ -1,33 +1,32 @@
 # Name of the project
 PROJECT_NAME=blockchain
 
-# Lista de arquivos .c
+# List of files .c
 C_SOURCE=$(wildcard ./src/*/*.c)
 
-# Lista de arquivos .h
+# List of files .h
 H_SOURCE=$(wildcard ./src/*/*.h)
 
-# Lista de arquivos objeto
+# List of object files
 OBJ=$(notdir $(subst .c,.o,$(C_SOURCE)))
 
-# Compilador
+# Compiler
 CC=gcc
 
-# Flags para o compilador
-CC_FLAGS=-c -W -Wall -lcrypto
+# Flags for the compiler
+CC_FLAGS=-c -pedantic -W -Wall -lcrypto
 
 all: $(PROJECT_NAME)
-# Regras para compilar e linkar arquivos
-# Inicia-se com o nome o nome do projeto, listando todas as dependencias (objetos) necessários para o projeto
-# '$@' representa o nome do arquivo do "alvo" da regra.
-# '$^' lista o nome de todos os pré-requisitos com espaço entre eles.
-# '$<' nome do primeiro pré-requisito.
-# '@' Omite o output de uma linha de comando
+# Rules to link and compile
+# Start with the name of the project, listing each dependency for it
+# '$@' represents the target of the rule.
+# '$^' lists all prerequisites with a spacing character between it.
+# '$<' name of the first prerequisite.
 
 $(PROJECT_NAME): $(OBJ) main.o
-	$(CC) $(addprefix ./objects/,$^) -lcrypto -o $@
+	$(CC) $(addprefix ./objects/,$^) -lcrypto -pthread -o $@
 	@ echo ''
-	@ echo 'Ligação e compilação finalizada.'
+	@ echo 'Linking and compiling done.'
 	@ echo ''
 
 %.o: ./src/vendor/%.c ./src/vendor/%.h
