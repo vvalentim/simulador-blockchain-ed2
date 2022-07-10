@@ -3,7 +3,9 @@
 #include <pthread.h>
 
 #define __MAX_THREADS 8
-#define __FILE_BLOCKS "./dat/mt_blocks_a.dat"
+/* Block size refers to the storage system. */
+#define __BLOCK_SIZE 4096
+#define __FILE_BLOCKCHAIN "./dat/mt_blocks_a.dat"
 #define __FILE_RAND "./dat/mt_rand_a.dat"
 /* Number of calls to the RNG function. */
 extern unsigned long __SEQ_RAND;

@@ -18,7 +18,7 @@
  * @param generator Pointer to the Mersenne Twister RNG.
  * @param min Interval minimum value.
  * @param max Interval maximum value.
- * @return An unsigned char value (0 to 255).
+ * @return An unsigned char value from a closed interval of min and max.
  */
 unsigned char randChar(MTRand *generator, unsigned char min, unsigned char max);
 
@@ -46,7 +46,7 @@ void printSHA256(unsigned char *hash);
 int getIntInput(char *errMsg);
 
 /**
- * Saves a block of bytest to a binary file.
+ * Saves a block of bytes to a binary file.
  * 
  * @param bytes Pointer to the block of bytes.
  * @param size Number of bytes for the type of data to be saved.

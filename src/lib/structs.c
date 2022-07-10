@@ -2,7 +2,8 @@
 
 TRawBlock initBlock(TMinedBlock *prevBlock, MTRand *rng) {
   TRawBlock block;
-  block.num = prevBlock ? prevBlock->raw.num + 1 : 0;
+  /* Block number should start at one because we're using the genesis (block zero) as reference for the previous hash. */
+  block.num = prevBlock ? prevBlock->raw.num + 1 : 1;
   block.nonce = 0;
 
   /* Fill data vector with zeroes to prevent trash on it. */
@@ -45,6 +46,40 @@ TRawBlock initBlock(TMinedBlock *prevBlock, MTRand *rng) {
   }
 
   return block;
+}
+
+TAddress* initAddresses() {
+  TAddress* vec = (TAddress *)malloc(sizeof(TAddress) * 256);
+
+  if (vec != NULL) {
+    for (int i = 0; i < 256; i++) {
+      TAddress el = { .addr = i, .coins = 0, .numTransactions = 0 };
+      vec[i] = el;
+    }
+  }
+
+  return vec;
+}
+
+TAddress* sortedAddrByCoins(TAddress *ref) {
+  TAddress aux;
+  TAddress *vec = (TAddress *)malloc(sizeof(TAddress) * 256);
+
+  if (ref && vec) {
+    memcpy(vec, ref, sizeof(TAddress) * 256);
+    
+    for (int i = 0; i < 255; i++) {
+      for (int j = i + 1; j < 256; j++) {
+        if ((vec + i)->coins > (vec + j)->coins) {
+          aux = *(vec + i);
+          *(vec + i) = *(vec + j);
+          *(vec + j) = aux;
+        }
+      }
+    }
+  }
+  
+  return vec;
 }
 
 int authBlock(unsigned char *prevHash, unsigned char *minedHash, TRawBlock *block) {
@@ -132,7 +167,7 @@ void mineNextBlock(TMinedBlock **prevBlock, MTRand *rng) {
   if (newBlock) {
     unsigned char proofDone = 0;
     newBlock->raw = initBlock(*prevBlock, rng);
-    pthread_t * tids = (pthread_t *)malloc(sizeof(pthread_t) * __MAX_THREADS);
+    pthread_t *tids = (pthread_t *)malloc(sizeof(pthread_t) * __MAX_THREADS);
     pthread_mutex_init(&__PROOF_MUTEX, NULL);
 
     while (!proofDone && __PROOF_DIFF >= 1) {
@@ -175,17 +210,129 @@ void mineNextBlock(TMinedBlock **prevBlock, MTRand *rng) {
 
       __PROOF_DIFF = __PROOF_MAX_DIFF;
       printf("RNG iterations: %lu\n", __SEQ_RAND);
-      saveToBin((void *)(newBlock), sizeof(TMinedBlock), 1, __FILE_BLOCKS, "ab");
+      saveToBin((void *)(newBlock), sizeof(TMinedBlock), 1, __FILE_BLOCKCHAIN, "ab");
       saveToBin((void *)(&__SEQ_RAND), sizeof(unsigned long), 1, __FILE_RAND, "wb");
       *prevBlock = newBlock;
     }
 
     pthread_mutex_destroy(&__PROOF_MUTEX);
     free(tids);
+  } else {
+    printf("Failed to allocate memory for a new block.\n");
   }
   
   clock_gettime(CLOCK_MONOTONIC, &finish);
   elapsed = (finish.tv_sec - start.tv_sec);
   elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
   printf("All done, elapsed: %f\n", elapsed);
+}
+
+TMinedBlock* searchBlock(unsigned int num) {
+  if (!num) {
+    printf("The element of index 0 is not included on the blockchain.\n");
+    return NULL;
+  }
+
+  FILE *fp = fopen(__FILE_BLOCKCHAIN, "rb");
+
+  if (!fp) {
+    printf("Failed to open blockchain file.\n");
+    return NULL;
+  }
+  /* Correction from block number to index of a vector. */
+  num = num - 1;
+
+  unsigned int elements = __BLOCK_SIZE / sizeof(TMinedBlock);
+  unsigned int blockIndex = num / elements;
+  unsigned int elementIndex = num % elements;
+  long offset = blockIndex * __BLOCK_SIZE;
+  TMinedBlock *blockBuffer = (TMinedBlock *)malloc(sizeof(TMinedBlock) * elements);
+  TMinedBlock *element = NULL;
+  
+  if (blockBuffer) {
+    fseek(fp, offset, SEEK_SET);
+    long results = fread(blockBuffer, sizeof(TMinedBlock), elements, fp);
+
+    printf("Searching for block nº %u on indexes [%u][%u]...\n", num + 1, blockIndex, elementIndex);
+    printf("Total results for block index %u: %lu\n", blockIndex, results);
+
+    if (ferror(fp)) {
+      printf("Failed to read from the file, an error occurred.\n");
+    } else {
+      if (results > 0 && elementIndex < results) {
+        element = (TMinedBlock *)malloc(sizeof(TMinedBlock));
+        
+        if (element) {
+          memcpy(element, blockBuffer + elementIndex, sizeof(TMinedBlock));
+        } else {
+          printf("Failed to allocate memory for the retrieved element (blockchain block).\n");
+        }
+      } else {
+        printf("Failed to read from the file, the indexes for element %u don't exist.\n", num + 1);
+      }
+    }
+      
+    free(blockBuffer);
+  } else {
+    printf("Failed to allocate memory for the block buffer.\n");
+  }
+  
+  fclose(fp);
+  return element;
+}
+
+void parseBlock(TMinedBlock *block, TAddress *addresses, unsigned int *nonceMax) {
+  if (!block) {
+    printf("Failed to parse, block pointer is NULL.\n");
+    return;
+  }
+
+  if (!addresses) {
+    printf("Failed to parse, address vector is NULL.\n");
+    return;
+  }
+
+  /* Check for greatest valued nonce, don't consider repeated values */
+  if (nonceMax[0] < block->raw.nonce) {
+    nonceMax[0] = block->raw.nonce;
+    nonceMax[1] = block->raw.num;
+  }
+
+  /* Parse transactions */
+  for (int t = 0; t < 61; t++) {
+    /* Each transaction contains 3 bytes so we can use that as an index */
+    int i = t * 3;
+
+    /* Sender, receiver and coins (indexes) respectively */
+    unsigned char s = i;
+    unsigned char r = i + 1;
+    unsigned char c = i + 2;
+
+    /* As we used the conditional for no duplicate addresses, we can also use this as a break condition */
+    if (block->raw.data[s] == block->raw.data[r]) {
+      break;
+    }
+
+    unsigned char sender = block->raw.data[s];
+    unsigned char receiver = block->raw.data[r];
+    unsigned char coins = block->raw.data[c];
+
+    /* Check subtraction on minimum value of unsigned char */
+    if ((addresses + sender)->coins < coins) {
+      (addresses + sender)->coins = 0;
+    } else {
+      (addresses + sender)->coins = (addresses + sender)->coins - coins;
+    }
+
+    /* Check addition on maximum value of unsigned char */
+    if ((addresses + receiver)->coins >= (UCHAR_MAX - coins)) {
+      (addresses + receiver)->coins = UCHAR_MAX;
+    } else {
+      (addresses + receiver)->coins = (addresses + receiver)->coins - coins;
+    }
+
+    /* Increase number of transactions for both addresses */
+    (addresses + sender)->numTransactions++;
+    (addresses + receiver)->numTransactions++;
+  }
 }

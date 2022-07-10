@@ -2,8 +2,8 @@
 
 unsigned char randChar(MTRand *generator, unsigned char min, unsigned char max) {
   __SEQ_RAND = __SEQ_RAND == ULONG_MAX ? 0 : __SEQ_RAND + 1;
-
-  return min + genRandLong(generator) % max + 1 - min;
+  
+  return min + genRandLong(generator) % max;
 }
 
 int checkProof(unsigned char *hash) {
@@ -27,21 +27,21 @@ void printSHA256(unsigned char *hash) {
 
 int getIntInput(char *errMsg) {
   char *end = NULL;
-	char buf[255];
-	int n = 0;
-  
-	while (fgets(buf, sizeof(buf), stdin)) {
-		n = strtol(buf, &end, 10);
+  char buf[255];
+  int n = 0;
 
-		if (end == buf || *end != '\n') {
-			if (errMsg != NULL) {
+  while (fgets(buf, sizeof(buf), stdin)) {
+    n = strtol(buf, &end, 10);
+
+    if (end == buf || *end != '\n') {
+      if (errMsg != NULL) {
         printf("%s", errMsg);
       }
-		} else { 
+    } else { 
       break; 
     }
-	}
-  
+  }
+
   return n;
 }
 
