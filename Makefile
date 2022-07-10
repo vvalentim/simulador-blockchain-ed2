@@ -13,8 +13,8 @@ OBJ=$(notdir $(subst .c,.o,$(C_SOURCE)))
 # Compiler
 CC=gcc
 
-# Flags for the compiler
-CC_FLAGS=-c -pedantic -W -Wall -lcrypto
+# Default flags for the compiler
+CC_FLAGS=-c -pedantic -W -Wall
 
 all: $(PROJECT_NAME)
 # Rules to link and compile
@@ -25,20 +25,23 @@ all: $(PROJECT_NAME)
 
 $(PROJECT_NAME): $(OBJ) main.o
 	$(CC) $(addprefix ./objects/,$^) -lcrypto -pthread -o $@
-	@ echo ''
+	@ echo '---------------------------'
 	@ echo 'Linking and compiling done.'
-	@ echo ''
+	@ echo '---------------------------'
 
-%.o: ./src/vendor/%.c ./src/vendor/%.h
+%.o: ./src/vendor/%.c ./src/vendor/%.h dirs
 	$(CC) $(CC_FLAGS) $< -o $(addprefix ./objects/,$@)
 
-%.o: ./src/lib/%.c ./src/lib/%.h
+%.o: ./src/lib/%.c ./src/lib/%.h dirs
 	$(CC) $(CC_FLAGS) $< -o $(addprefix ./objects/,$@)
 
-main.o: ./src/main.c $(H_SOURCE)
+main.o: ./src/main.c $(H_SOURCE) dirs
 	$(CC) $(CC_FLAGS) $< -o $(addprefix ./objects/,$@)
+
+dirs:
+	mkdir -p './objects' './dat' './logs'
 
 clean:
-	@ rm -rf ./objects/*.o $(PROJECT_NAME)
+	@ rm -rf './objects' $(PROJECT_NAME)
 
 .PHONY: all clean
